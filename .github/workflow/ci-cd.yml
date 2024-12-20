@@ -1,0 +1,36 @@
+
+name: Deploy to AWS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write   # Grant permission for GitHub Actions to request an OIDC token
+      contents: read    # Read access to repository contents
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}  # Use the role ARN from secrets
+          role-session-name: GitHubActionsSession
+          aws-region: ${{ secrets.AWS_REGION }}         # Specify your AWS region
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: '1.5.0' 
+
+      - name: Deploy with Terraform (or AWS CLI)
+        run: |
+           terraform init
+           terraform apply -auto-approve
+           terraform destroy -auto-approve
